@@ -1,0 +1,69 @@
+"""
+sanity_03_far_field.py
+──────────────────────
+CMOS가 매우 멀 때 (F=0.1)  임의의 가우시안 변형에 대해
+  - CMOS 세기 / 위상 균일성 확인
+출력: 3x3  (ref / def / diff)
+"""
+import sys, numpy as np
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from me_0318 import forward_propagate
+from sanity_utils import plot_3x3
+
+wavelength = 500e-9;  A0, t = 1.0, 0.0
+n1 = 1.0;  n2_complex = complex(0.97112, 1.8737)
+pixel_size = 10e-6;  N = 32
+
+x_coords = np.linspace(1, N, N) * pixel_size
+y_coords = np.linspace(-N//2, N//2-1, N) * pixel_size
+
+X_tmp, Y_tmp = np.meshgrid(x_coords, y_coords)
+h_def = (-wavelength/8) * np.exp(
+    -((X_tmp-x_coords[N//2])**2 + Y_tmp**2) / (2*(4*pixel_size)**2))
+h_ref = np.zeros_like(h_def)
+
+W       = (N//2) * pixel_size
+z_prop  = 1.0   # 1 m far-field
+x_cmos  = x_coords[-1] + z_prop
+
+N_cmos   = 32
+z_center = (x_coords[0] + x_coords[-1]) / 2
+half     = z_prop * wavelength / pixel_size + W
+y_prime  = np.linspace(-half, half, N_cmos)
+z_prime  = np.linspace(z_center - half, z_center + half, N_cmos)
+
+
+def run(out_dir: Path):
+    print(f"[03] Far-field  z={z_prop:.1f} m ...")
+    res_ref = forward_propagate(
+        h_ref, x_coords, y_coords, y_prime, z_prime,
+        wavelength, A0, t, n1, n2_complex, x_cmos)
+    res_def = forward_propagate(
+        h_def, x_coords, y_coords, y_prime, z_prime,
+        wavelength, A0, t, n1, n2_complex, x_cmos)
+
+    I_ref, I_def = res_ref['I_CMOS'], res_def['I_CMOS']
+    print(f"  I_ref CoV : {I_ref.std()/I_ref.mean():.4f}")
+    print(f"  I_def CoV : {I_def.std()/I_def.mean():.4f}")
+
+    plot_3x3(
+        title      = f'Sanity 03 – Far-Field  z={z_prop:.1f} m',
+        h_ref_nm   = h_ref * 1e9,
+        h_def_nm   = h_def * 1e9,
+        x_coords   = x_coords,
+        y_coords   = y_coords,
+        I_ref      = I_ref,
+        I_def      = I_def,
+        phi_ref    = np.angle(res_ref['U_CMOS']),
+        phi_def    = np.angle(res_def['U_CMOS']),
+        y_prime    = y_prime,
+        z_prime    = z_prime,
+        out_path   = out_dir / 'sanity_03_far_field.png',
+    )
+
+if __name__ == '__main__':
+    out_dir = Path(__file__).parent / 'sanity_results'
+    out_dir.mkdir(exist_ok=True)
+    run(out_dir)
