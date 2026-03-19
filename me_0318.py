@@ -61,12 +61,10 @@ def compute_fresnel_reflection(
     sin_t=(n1/n2)*sin_i
     cos_t=np.sqrt(1.0-sin_t**2)
     
-    r_s=(n1*cos_i-n2*cos_t) / (n1*cos_i+n2*cos_t)
-    r_p=(n2*cos_i-n1*cos_t)/(n2*cos_i+n1*cos_t)
+    r_s=(n1*cos_i-n2*cos_t) / (n1*cos_i+n2*cos_t)   #s파 단일 편광
+    amp=np.abs(r_s)
+    phase=np.angle(r_s)
     
-    amp   = np.sqrt((np.abs(r_s)**2 + np.abs(r_p)**2) / 2.0)
-    # 평균 위상
-    phase = (np.angle(r_s) + np.angle(r_p)) / 2.0
     return amp * np.exp(1j * phase)
 
 #반사 직후 복소장
