@@ -1,9 +1,5 @@
 """
-sanity_03_far_field.py
-──────────────────────
-CMOS가 매우 멀 때 (z=1m) 가우시안 변형에 대해
-  - CMOS 세기 / 위상 균일성 확인
-출력: 3x3
+sanity_03_far_field.py  (수정: U_CMOS 직접 전달)
 """
 import sys, numpy as np
 from pathlib import Path
@@ -14,12 +10,10 @@ from sanity_utils  import plot_3x3
 from sanity_params import (wavelength, A0, t, n1, n2_complex,
                            x_coords, y_coords, pixel_size)
 
-# far-field 전용 CMOS 설정 (1m)
-z_prop   = 1.0
+z_prop   = 100.0
 x_cmos   = x_coords[-1] + z_prop
 z_center = (x_coords[0] + x_coords[-1]) / 2
 
-# Nyquist 만족하는 CMOS 범위
 W        = (len(x_coords)//2) * pixel_size
 half     = z_prop * wavelength / pixel_size + W
 N_cmos   = 64
@@ -46,18 +40,18 @@ def run(out_dir: Path):
     print(f"  I_def CoV : {I_def.std()/I_def.mean():.4f}", flush=True)
 
     plot_3x3(
-        title    = f'Sanity 03 – Far-Field  z={z_prop:.1f} m',
-        h_ref_nm = h_ref * 1e9,
-        h_def_nm = h_def * 1e9,
-        x_coords = x_coords,
-        y_coords = y_coords,
-        I_ref    = I_ref,
-        I_def    = I_def,
-        phi_ref  = np.angle(res_ref['U_CMOS']),
-        phi_def  = np.angle(res_def['U_CMOS']),
-        y_prime  = y_prime,
-        z_prime  = z_prime,
-        out_path = out_dir / 'sanity_03_far_field.png',
+        title       = f'Sanity 03 – Far-Field  z={z_prop:.1f} m',
+        h_ref_nm    = h_ref * 1e9,
+        h_def_nm    = h_def * 1e9,
+        x_coords    = x_coords,
+        y_coords    = y_coords,
+        I_ref       = I_ref,
+        I_def       = I_def,
+        U_ref_cmos  = res_ref['U_CMOS'],   # ← 변경
+        U_def_cmos  = res_def['U_CMOS'],   # ← 변경
+        y_prime     = y_prime,
+        z_prime     = z_prime,
+        out_path    = out_dir / 'sanity_03_far_field.png',
     )
 
 if __name__ == '__main__':

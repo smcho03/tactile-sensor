@@ -1,0 +1,8 @@
+
+trash/
+simulation_results/
+sanity_results/
+results/
+final/
+.vscode/
+__pycache__/
