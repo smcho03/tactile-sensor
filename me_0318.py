@@ -5,6 +5,7 @@ from matplotlib.colors import TwoSlopeNorm
 from pathlib import Path
 from tqdm import tqdm
 from skimage.restoration import unwrap_phase
+import time
 
 #h를 통한 반사면 gradient 계산
 def compute_surface_gradients(
@@ -97,6 +98,30 @@ def compute_U_CMOS_loop(
     
     U_CMOS=np.zeros((Nz_cmos, Ny_cmos),dtype=complex)
     
+    # --- [예상 시간 사전 계산 (Warm-up)] ---
+    t0 = time.perf_counter()
+    total_pixels = Nz_cmos * Ny_cmos
+    
+    # 임의의 1개 픽셀(인덱스 0,0)에 대한 연산 수행
+    test_delta_x = x_cmos_location - X
+    test_delta_y = y_prime_coords[0] - Y
+    test_delta_z = z_prime_coords[0] - Z_s
+    test_r = np.sqrt(test_delta_x**2 + test_delta_y**2 + test_delta_z**2)
+    test_obliquity = (1.0 + dh_dx_ref)*test_delta_x + dh_dy_ref*test_delta_y - test_delta_z
+    test_integrand = U_ref * (np.exp(1j*k_wave*test_r) / test_r**2) * test_obliquity * dx_ref_grid * dy_ref_grid
+    _ = np.sum(test_integrand) / (1j * wavelength)
+    
+    t1 = time.perf_counter()
+    
+    single_iter_time = t1 - t0
+    estimated_total_seconds = single_iter_time * total_pixels
+    
+    m, s = divmod(estimated_total_seconds, 60)
+    h_time, m = divmod(m, 60)
+    print(f"\n[사전 프로파일링] 1픽셀 연산: {single_iter_time*1000:.2f} ms")
+    print(f"[사전 프로파일링] 총 {total_pixels} 픽셀 예상 소요 시간: 약 {int(h_time)}시간 {int(m)}분 {int(s)}초\n")
+    # ----------------------------------------
+    
     pbar = tqdm(
         total=Nz_cmos * Ny_cmos,
         desc="RS integral",
@@ -181,7 +206,7 @@ def forward_propagate(
     
 
 if __name__=="__main__":
-    import time
+
     
     #레이저, 매질 파라미터
     wavelength=500e-9

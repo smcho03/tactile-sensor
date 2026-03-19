@@ -15,7 +15,7 @@ n2_complex  = complex(0.97112, 1.8737)   # 금 500nm
 
 # ── 반사 멤브레인 ─────────────────────────────────────────────
 r_width     = 500e-6        # 반사면 실제 폭 [m]
-N           = 128           # 픽셀 개수
+N           = 1000           # 픽셀 개수
 pixel_size  = r_width / N   # 픽셀 간격 자동 계산 = 3.9 μm
 
 x_coords = np.linspace(1, N, N) * pixel_size          # x > 0
@@ -23,7 +23,7 @@ y_coords = np.linspace(-(N-1)/2, (N-1)/2, N) * pixel_size  # 대칭
 
 # ── CMOS ─────────────────────────────────────────────────────
 cmos_width  = 600e-6        # CMOS 실제 폭 [m]
-N_cmos      = 200           # CMOS 픽셀 개수
+N_cmos      = 3000           # CMOS 픽셀 개수
 cmos_pixel  = cmos_width / N_cmos   # = 3.0 μm
 
 x_center = (x_coords[0] + x_coords[-1]) / 2
